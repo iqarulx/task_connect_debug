@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/task_connect_debug.iml" filepath="$PROJECT_DIR$/task_connect_debug.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/task_connect_debug_android.iml" filepath="$PROJECT_DIR$/android/task_connect_debug_android.iml" />
+    </modules>
+  </component>
+</project>
