@@ -402,10 +402,12 @@ class _DashboardViewState extends State<DashboardView>
   openTaskEditForm(String? taskId) async {
     await showModalBottomSheet(
       backgroundColor: whiteColor,
+      isDismissible: false,
+      enableDrag: false,
       useSafeArea: true,
       shape: RoundedRectangleBorder(
         side: BorderSide.none,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
       ),
       isScrollControlled: true,
       context: context,
@@ -432,9 +434,11 @@ class _DashboardViewState extends State<DashboardView>
     await showModalBottomSheet(
       backgroundColor: whiteColor,
       useSafeArea: true,
+      enableDrag: false,
+      isDismissible: false,
       shape: RoundedRectangleBorder(
         side: BorderSide.none,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
       ),
       isScrollControlled: true,
       context: context,
@@ -467,7 +471,7 @@ class _DashboardViewState extends State<DashboardView>
           ]);
       final List<int> bytes = workbook.saveAsStream();
       workbook.dispose();
-      await helper.saveAndLaunchFile(bytes, 'TaskConnect.xlsx');
+      // await helper.saveAndLaunchFile(bytes, 'TaskConnect.xlsx');
     } else {
       showSnackBar(context,
           content: "Please select filter before download", isSuccess: false);

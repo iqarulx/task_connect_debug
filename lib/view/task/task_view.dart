@@ -119,7 +119,9 @@ class _TaskViewState extends State<TaskView> {
   removeRecipientRow(int index) {
     setState(() {
       selectedUsersRows.removeAt(index);
-      selectedUserIds.removeAt(index);
+      if (index >= 0 && index < selectedUserIds.length) {
+        selectedUserIds.removeAt(index);
+      }
     });
   }
 
@@ -127,13 +129,24 @@ class _TaskViewState extends State<TaskView> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2022),
-      lastDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100, 12, 31),
+    );
+    return picked;
+  }
+
+  Future<DateTime?> completionDatePicker() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateFormat("dd-MM-yyyy").parse(startDate.text),
+      firstDate: DateFormat("dd-MM-yyyy").parse(startDate.text),
+      lastDate: DateTime(2100, 12, 31),
     );
     return picked;
   }
 
   startDatePicker() async {
+    endDate.clear();
     final DateTime? picked = await datePicker();
     if (picked != null) {
       setState(() {
@@ -143,20 +156,18 @@ class _TaskViewState extends State<TaskView> {
   }
 
   endDatePicker() async {
-    final DateTime? picked = await datePicker();
+    if (startDate.text.isNotEmpty) {
+      final DateTime? picked = await completionDatePicker();
 
-    if (picked != null) {
-      setState(() {
-        endDate.text = DateFormat('dd-MM-yyyy').format(picked);
-      });
+      if (picked != null) {
+        setState(() {
+          endDate.text = DateFormat('dd-MM-yyyy').format(picked);
+        });
+      }
+    } else {
+      showSnackBar(context,
+          content: "Please select start date first", isSuccess: false);
     }
-  }
-
-  clearNow() {
-    setState(() {
-      startDate.clear();
-      endDate.clear();
-    });
   }
 
   submitForm() async {
@@ -232,25 +243,27 @@ class _TaskViewState extends State<TaskView> {
             backgroundColor: Colors.white,
             appBar: appbar(context),
             bottomNavigationBar: bottomaAppbar(context),
-            body: FutureBuilder<bool>(
-                future: taskEditHandler,
-                builder: (context, AsyncSnapshot<bool> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    if (snapshot.error == 'Network Error') {
-                      return futureDisplayError(
-                          content: snapshot.error.toString());
-                    } else {
-                      return futureDisplayError(
-                          content: snapshot.error.toString());
-                    }
-                  } else {
-                    return screenView(context);
-                  }
-                })),
+            body: body()),
       ),
     );
+  }
+
+  FutureBuilder<bool> body() {
+    return FutureBuilder<bool>(
+        future: taskEditHandler,
+        builder: (context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            if (snapshot.error == 'Network Error') {
+              return futureDisplayError(content: snapshot.error.toString());
+            } else {
+              return futureDisplayError(content: snapshot.error.toString());
+            }
+          } else {
+            return screenView(context);
+          }
+        });
   }
 
   Padding screenView(BuildContext context) {
