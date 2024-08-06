@@ -32,469 +32,6 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView>
     with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  TaskListDataSource taskListDataSource = TaskListDataSource(taskListData: []);
-  late TabController _tabController;
-  String name = "", email = "", tableHead = "";
-  List<DashboardCountModel> dashboardCountList = [];
-  List<TaskList> taskList = <TaskList>[];
-  Future? dashboardCountHandler;
-  Future? taskListHandler;
-  TextEditingController search = TextEditingController();
-  int selectedFilter = 1;
-  final GlobalKey<SfDataGridState> key = GlobalKey<SfDataGridState>();
-  bool? showInsights = false;
-
-  Future<void> dashboardCountListView() async {
-    try {
-      setState(() {
-        dashboardCountList.clear();
-      });
-
-      return await DashboardService()
-          .getDashboardCount()
-          .then((resultData) async {
-        if (resultData != null && resultData["head"]["code"] == 200) {
-          var data = resultData["head"]["msg"];
-          DashboardCountModel model = DashboardCountModel();
-          model.receivedCount = data["received_count"].toString();
-          model.cancelledCount = data["cancelled_count"].toString();
-          model.pendingCount = data["pending_count"].toString();
-          model.completedCount = data["completed_count"].toString();
-          model.rejectedCount = data["rejected_count"].toString();
-          model.reminderCount = data["reminder_count"].toString();
-          model.submittedCount = data["submitted_count"].toString();
-          model.showInsights =
-              data["check_insights"].toString() == "1" ? true : false;
-
-          setState(() {
-            dashboardCountList.add(model);
-          });
-        } else if (resultData["head"]["code"] == 400) {
-          setState(() {
-            dashboardCountList.clear();
-          });
-          showSnackBar(context,
-              content: resultData["head"]["msg"].toString(), isSuccess: false);
-          throw resultData["head"]["msg"].toString();
-        }
-      });
-    } on SocketException catch (e) {
-      throw "Network Error";
-    } catch (e) {
-      throw e.toString();
-    }
-  }
-
-  Future<void> taskListView(int? filter) async {
-    setState(() {
-      taskList.clear();
-    });
-
-    try {
-      return await DashboardService()
-          .getTaskList(filter)
-          .then((resultData) async {
-        if (resultData["head"]["code"] == 200) {
-          if (resultData["head"]["msg"].isNotEmpty) {
-            if (resultData["head"]["msg"]["table_head"] != "") {
-              setState(() {
-                tableHead = resultData["head"]["msg"]["table_head"];
-              });
-            }
-
-            for (var data in resultData["head"]["msg"]["task_list"]) {
-              setState(() {
-                taskList.add(TaskList(
-                    data["reminder_count"] == ""
-                        ? "${data["request_number"].toString()}/"
-                        : "${data["request_number"].toString()}/${data["reminder_count"].toString()}",
-                    GestureDetector(
-                      onTap: () {
-                        openTaskEditForm(data["task_tracker_id"].toString());
-                      },
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: greenColor,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            "View",
-                            style: TextStyle(
-                              color: whiteColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    data["subject"].toString(),
-                    data["filter"] == 'filter2' ||
-                            data["filter"] == 'filter3' ||
-                            data["filter"] == 'filter4'
-                        ? data["full_recipient_name"]
-                        : data["requestor_name"],
-                    data["department_name"].toString(),
-                    data["description"].toString(),
-                    data["priority_level"].toString(),
-                    data["start_date"].toString(),
-                    data["end_date"].toString(),
-                    data["task_duration"].toString(),
-                    data["show_start_button"] == 1
-                        ? GestureDetector(
-                            onTap: () {
-                              startTask(data['task_tracker_id']);
-                            },
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: greenColor,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Start",
-                                  style: TextStyle(
-                                    color: whiteColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : data["start_time"].toString() != ''
-                            ? Text(data["start_time"].toString())
-                            : Container(),
-                    data["show_complete_button"] == 1
-                        ? GestureDetector(
-                            onTap: () {
-                              completeTask(data["task_tracker_id"]);
-                            },
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: greenColor,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Complete",
-                                  style: TextStyle(
-                                    color: whiteColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : data["end_time"].toString() != ''
-                            ? Text(data["end_time"].toString())
-                            : Container(),
-                    data["show_reallocate_button"] == 1
-                        ? GestureDetector(
-                            onTap: () {
-                              reallocateTask(data["task_tracker_id"]);
-                            },
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: redColor,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Reallocate",
-                                  style: TextStyle(
-                                    color: whiteColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Container(),
-                    data["show_reject_button"] == 1
-                        ? GestureDetector(
-                            onTap: () {
-                              rejectTask(data["task_tracker_id"]);
-                            },
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: redColor,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Reject",
-                                  style: TextStyle(
-                                    color: whiteColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Container(),
-                    data["next_recipient_name"]));
-              });
-            }
-          }
-        } else if (resultData["head"]["code"] == 400) {
-          showSnackBar(context,
-              content: resultData["head"]["msg"].toString(), isSuccess: false);
-          throw resultData["head"]["msg"].toString();
-        }
-      });
-    } on SocketException catch (e) {
-      throw "Network Error";
-    } catch (e) {
-      throw e.toString();
-    }
-  }
-
-  startTask(String taskId) async {
-    try {
-      futureLoading(context);
-      await DashboardService().startTask(taskId).then((onValue) {
-        if (onValue["head"]["code"] == 200) {
-          Navigator.pop(context);
-          showSnackBar(context,
-              content: onValue["head"]["msg"].toString(), isSuccess: true);
-
-          setState(() {
-            dashboardCountHandler = dashboardCountListView();
-            taskListHandler = taskListView(1).then((onValue) {
-              taskListDataSource = TaskListDataSource(taskListData: taskList);
-              selectedFilter = 1;
-            });
-          });
-        } else {
-          Navigator.pop(context);
-          showSnackBar(context,
-              content: onValue["head"]["msg"].toString(), isSuccess: false);
-        }
-      });
-    } catch (e) {
-      Navigator.pop(context);
-      showSnackBar(context, content: e.toString(), isSuccess: false);
-    }
-  }
-
-  completeTask(String taskId) async {
-    futureLoading(context);
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return TaskcompleteDialog(taskId: taskId);
-      },
-    ).then((onValue) async {
-      Navigator.pop(context);
-      if (onValue) {
-        showSnackBar(context, content: "Task Completed", isSuccess: true);
-        setState(() {
-          dashboardCountHandler = dashboardCountListView();
-          taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(taskListData: taskList);
-            selectedFilter = 1;
-          });
-        });
-      } else {
-        showSnackBar(context,
-            content: "Sorry updation not complete. Please try again",
-            isSuccess: false);
-      }
-    });
-  }
-
-  reallocateTask(String taskId) async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ReallocationDialog(taskId: taskId),
-    ).then((onValue) {
-      if (onValue) {
-        showSnackBar(context, content: "Updated Successfully", isSuccess: true);
-        setState(() {
-          dashboardCountHandler = dashboardCountListView();
-          taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(taskListData: taskList);
-            selectedFilter = 1;
-          });
-        });
-      } else {
-        showSnackBar(context,
-            content: "Sorry updation not completed. Please try again",
-            isSuccess: false);
-      }
-    });
-  }
-
-  rejectTask(String taskId) async {
-    await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const ConfirmDialog(
-              title: "Reject",
-              content: "Are you sure want to reject task?",
-            )).then((onValue) async {
-      if (onValue) {
-        futureLoading(context);
-
-        await DashboardService().rejectTask(taskId).then((onValue) {
-          if (onValue["head"]["code"] == 200) {
-            Navigator.pop(context);
-
-            showSnackBar(context,
-                content: onValue["head"]["msg"], isSuccess: true);
-            setState(() {
-              dashboardCountHandler = dashboardCountListView();
-              taskListHandler = taskListView(1).then((onValue) {
-                taskListDataSource = TaskListDataSource(taskListData: taskList);
-                selectedFilter = 1;
-              });
-            });
-          } else {
-            Navigator.pop(context);
-
-            showSnackBar(context,
-                content: onValue["head"]["msg"], isSuccess: true);
-          }
-        });
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    dashboardCountHandler = dashboardCountListView().whenComplete(initData);
-    taskListHandler = taskListView(1).then((onValue) {
-      taskListDataSource = TaskListDataSource(taskListData: taskList);
-      selectedFilter = 1;
-    });
-    _tabController = TabController(length: 2, vsync: this);
-    getEmployee();
-  }
-
-  initData() {
-    if (dashboardCountList.isNotEmpty) {
-      setState(() {
-        showInsights = dashboardCountList.first.showInsights;
-      });
-    }
-  }
-
-  getEmployee() async {
-    name = await LocalDBConfig().getName() ?? '';
-    email = await LocalDBConfig().getEmail() ?? '';
-    setState(() {});
-  }
-
-  openTaskEditForm(String? taskId) async {
-    await showModalBottomSheet(
-      backgroundColor: whiteColor,
-      isDismissible: false,
-      enableDrag: false,
-      useSafeArea: true,
-      shape: RoundedRectangleBorder(
-        side: BorderSide.none,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      isScrollControlled: true,
-      context: context,
-      builder: (builder) {
-        return TaskEdit(
-          taskId: taskId!,
-          selectedFilter: selectedFilter,
-        );
-      },
-    ).then((onValue) {
-      if (onValue != null) {
-        if (onValue) {
-          dashboardCountHandler = dashboardCountListView();
-          taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(taskListData: taskList);
-            selectedFilter = 1;
-          });
-        }
-      }
-    });
-  }
-
-  openTaskForm() async {
-    await showModalBottomSheet(
-      backgroundColor: whiteColor,
-      useSafeArea: true,
-      enableDrag: false,
-      isDismissible: false,
-      shape: RoundedRectangleBorder(
-        side: BorderSide.none,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      isScrollControlled: true,
-      context: context,
-      builder: (builder) {
-        return const TaskView();
-      },
-    ).then((onValue) {
-      if (onValue != null) {
-        if (onValue) {
-          dashboardCountHandler = dashboardCountListView();
-          taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(taskListData: taskList);
-            selectedFilter = 1;
-          });
-        }
-      }
-    });
-  }
-
-  Future exportDataGridToExcel() async {
-    if (key.currentState != null) {
-      final Workbook workbook = key.currentState!.exportToExcelWorkbook(
-          exportStackedHeaders: true,
-          excludeColumns: [
-            "completedExtend",
-            "start",
-            "reallocation",
-            "reject",
-            "viewTask"
-          ]);
-      final List<int> bytes = workbook.saveAsStream();
-      workbook.dispose();
-      // await helper.saveAndLaunchFile(bytes, 'TaskConnect.xlsx');
-    } else {
-      showSnackBar(context,
-          content: "Please select filter before download", isSuccess: false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  searchTask() {
-    List<TaskList> filteredList = taskList.where((task) {
-      return task.sno.toLowerCase().contains(search.text.toLowerCase()) ||
-          task.subject.toLowerCase().contains(search.text.toLowerCase());
-    }).toList();
-
-    setState(() {
-      taskListDataSource = TaskListDataSource(taskListData: filteredList);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -1121,4 +658,467 @@ class _DashboardViewState extends State<DashboardView>
       ],
     );
   }
+
+  Future<void> dashboardCountListView() async {
+    try {
+      setState(() {
+        dashboardCountList.clear();
+      });
+
+      return await DashboardService()
+          .getDashboardCount()
+          .then((resultData) async {
+        if (resultData != null && resultData["head"]["code"] == 200) {
+          var data = resultData["head"]["msg"];
+          DashboardCountModel model = DashboardCountModel();
+          model.receivedCount = data["received_count"].toString();
+          model.cancelledCount = data["cancelled_count"].toString();
+          model.pendingCount = data["pending_count"].toString();
+          model.completedCount = data["completed_count"].toString();
+          model.rejectedCount = data["rejected_count"].toString();
+          model.reminderCount = data["reminder_count"].toString();
+          model.submittedCount = data["submitted_count"].toString();
+          model.showInsights =
+              data["check_insights"].toString() == "1" ? true : false;
+
+          setState(() {
+            dashboardCountList.add(model);
+          });
+        } else if (resultData["head"]["code"] == 400) {
+          setState(() {
+            dashboardCountList.clear();
+          });
+          showSnackBar(context,
+              content: resultData["head"]["msg"].toString(), isSuccess: false);
+          throw resultData["head"]["msg"].toString();
+        }
+      });
+    } on SocketException catch (e) {
+      throw "Network Error";
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Future<void> taskListView(int? filter) async {
+    setState(() {
+      taskList.clear();
+    });
+
+    try {
+      return await DashboardService()
+          .getTaskList(filter)
+          .then((resultData) async {
+        if (resultData["head"]["code"] == 200) {
+          if (resultData["head"]["msg"].isNotEmpty) {
+            if (resultData["head"]["msg"]["table_head"] != "") {
+              setState(() {
+                tableHead = resultData["head"]["msg"]["table_head"];
+              });
+            }
+
+            for (var data in resultData["head"]["msg"]["task_list"]) {
+              setState(() {
+                taskList.add(TaskList(
+                    data["reminder_count"] == ""
+                        ? "${data["request_number"].toString()}/"
+                        : "${data["request_number"].toString()}/${data["reminder_count"].toString()}",
+                    GestureDetector(
+                      onTap: () {
+                        openTaskEditForm(data["task_tracker_id"].toString());
+                      },
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: greenColor,
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "View",
+                            style: TextStyle(
+                              color: whiteColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    data["subject"].toString(),
+                    data["filter"] == 'filter2' ||
+                            data["filter"] == 'filter3' ||
+                            data["filter"] == 'filter4'
+                        ? data["full_recipient_name"]
+                        : data["requestor_name"],
+                    data["department_name"].toString(),
+                    data["description"].toString(),
+                    data["priority_level"].toString(),
+                    data["start_date"].toString(),
+                    data["end_date"].toString(),
+                    data["task_duration"].toString(),
+                    data["show_start_button"] == 1
+                        ? GestureDetector(
+                            onTap: () {
+                              startTask(data['task_tracker_id']);
+                            },
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: greenColor,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Start",
+                                  style: TextStyle(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : data["start_time"].toString() != ''
+                            ? Text(data["start_time"].toString())
+                            : Container(),
+                    data["show_complete_button"] == 1
+                        ? GestureDetector(
+                            onTap: () {
+                              completeTask(data["task_tracker_id"]);
+                            },
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: greenColor,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Complete",
+                                  style: TextStyle(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : data["end_time"].toString() != ''
+                            ? Text(data["end_time"].toString())
+                            : Container(),
+                    data["show_reallocate_button"] == 1
+                        ? GestureDetector(
+                            onTap: () {
+                              reallocateTask(data["task_tracker_id"]);
+                            },
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: redColor,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Reallocate",
+                                  style: TextStyle(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    data["show_reject_button"] == 1
+                        ? GestureDetector(
+                            onTap: () {
+                              rejectTask(data["task_tracker_id"]);
+                            },
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: redColor,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Reject",
+                                  style: TextStyle(
+                                    color: whiteColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    data["next_recipient_name"]));
+              });
+            }
+          }
+        } else if (resultData["head"]["code"] == 400) {
+          showSnackBar(context,
+              content: resultData["head"]["msg"].toString(), isSuccess: false);
+          throw resultData["head"]["msg"].toString();
+        }
+      });
+    } on SocketException catch (e) {
+      throw "Network Error";
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  startTask(String taskId) async {
+    try {
+      futureLoading(context);
+      await DashboardService().startTask(taskId).then((onValue) {
+        if (onValue["head"]["code"] == 200) {
+          Navigator.pop(context);
+          showSnackBar(context,
+              content: onValue["head"]["msg"].toString(), isSuccess: true);
+
+          setState(() {
+            dashboardCountHandler = dashboardCountListView();
+            taskListHandler = taskListView(1).then((onValue) {
+              taskListDataSource = TaskListDataSource(taskListData: taskList);
+              selectedFilter = 1;
+            });
+          });
+        } else {
+          Navigator.pop(context);
+          showSnackBar(context,
+              content: onValue["head"]["msg"].toString(), isSuccess: false);
+        }
+      });
+    } catch (e) {
+      Navigator.pop(context);
+      showSnackBar(context, content: e.toString(), isSuccess: false);
+    }
+  }
+
+  completeTask(String taskId) async {
+    futureLoading(context);
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return TaskcompleteDialog(taskId: taskId);
+      },
+    ).then((onValue) async {
+      Navigator.pop(context);
+      if (onValue) {
+        showSnackBar(context, content: "Task Completed", isSuccess: true);
+        setState(() {
+          dashboardCountHandler = dashboardCountListView();
+          taskListHandler = taskListView(1).then((onValue) {
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
+            selectedFilter = 1;
+          });
+        });
+      } else {
+        showSnackBar(context,
+            content: "Sorry updation not complete. Please try again",
+            isSuccess: false);
+      }
+    });
+  }
+
+  reallocateTask(String taskId) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ReallocationDialog(taskId: taskId),
+    ).then((onValue) {
+      if (onValue) {
+        showSnackBar(context, content: "Updated Successfully", isSuccess: true);
+        setState(() {
+          dashboardCountHandler = dashboardCountListView();
+          taskListHandler = taskListView(1).then((onValue) {
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
+            selectedFilter = 1;
+          });
+        });
+      } else {
+        showSnackBar(context,
+            content: "Sorry updation not completed. Please try again",
+            isSuccess: false);
+      }
+    });
+  }
+
+  rejectTask(String taskId) async {
+    await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const ConfirmDialog(
+              title: "Reject",
+              content: "Are you sure want to reject task?",
+            )).then((onValue) async {
+      if (onValue) {
+        futureLoading(context);
+
+        await DashboardService().rejectTask(taskId).then((onValue) {
+          if (onValue["head"]["code"] == 200) {
+            Navigator.pop(context);
+
+            showSnackBar(context,
+                content: onValue["head"]["msg"], isSuccess: true);
+            setState(() {
+              dashboardCountHandler = dashboardCountListView();
+              taskListHandler = taskListView(1).then((onValue) {
+                taskListDataSource = TaskListDataSource(taskListData: taskList);
+                selectedFilter = 1;
+              });
+            });
+          } else {
+            Navigator.pop(context);
+
+            showSnackBar(context,
+                content: onValue["head"]["msg"], isSuccess: true);
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    dashboardCountHandler = dashboardCountListView().whenComplete(initData);
+    taskListHandler = taskListView(1).then((onValue) {
+      taskListDataSource = TaskListDataSource(taskListData: taskList);
+      selectedFilter = 1;
+    });
+    _tabController = TabController(length: 2, vsync: this);
+    getEmployee();
+  }
+
+  initData() {
+    if (dashboardCountList.isNotEmpty) {
+      setState(() {
+        showInsights = dashboardCountList.first.showInsights;
+      });
+    }
+  }
+
+  getEmployee() async {
+    name = await LocalDBConfig().getName() ?? '';
+    email = await LocalDBConfig().getEmail() ?? '';
+    setState(() {});
+  }
+
+  openTaskEditForm(String? taskId) async {
+    await showModalBottomSheet(
+      backgroundColor: whiteColor,
+      isDismissible: false,
+      enableDrag: false,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        side: BorderSide.none,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      isScrollControlled: true,
+      context: context,
+      builder: (builder) {
+        return TaskEdit(
+          taskId: taskId!,
+          selectedFilter: selectedFilter,
+        );
+      },
+    ).then((onValue) {
+      if (onValue != null) {
+        if (onValue) {
+          dashboardCountHandler = dashboardCountListView();
+          taskListHandler = taskListView(1).then((onValue) {
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
+            selectedFilter = 1;
+          });
+        }
+      }
+    });
+  }
+
+  openTaskForm() async {
+    await showModalBottomSheet(
+      backgroundColor: whiteColor,
+      useSafeArea: true,
+      enableDrag: false,
+      isDismissible: false,
+      shape: RoundedRectangleBorder(
+        side: BorderSide.none,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      isScrollControlled: true,
+      context: context,
+      builder: (builder) {
+        return const TaskView();
+      },
+    ).then((onValue) {
+      if (onValue != null) {
+        if (onValue) {
+          dashboardCountHandler = dashboardCountListView();
+          taskListHandler = taskListView(1).then((onValue) {
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
+            selectedFilter = 1;
+          });
+        }
+      }
+    });
+  }
+
+  Future exportDataGridToExcel() async {
+    if (key.currentState != null) {
+      final Workbook workbook = key.currentState!.exportToExcelWorkbook(
+          exportStackedHeaders: true,
+          excludeColumns: [
+            "completedExtend",
+            "start",
+            "reallocation",
+            "reject",
+            "viewTask"
+          ]);
+      final List<int> bytes = workbook.saveAsStream();
+      workbook.dispose();
+      await helper.saveAndLaunchFile(bytes, 'TaskConnect.xlsx');
+    } else {
+      showSnackBar(context,
+          content: "Please select filter before download", isSuccess: false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  searchTask() {
+    List<TaskList> filteredList = taskList.where((task) {
+      return task.sno.toLowerCase().contains(search.text.toLowerCase()) ||
+          task.subject.toLowerCase().contains(search.text.toLowerCase());
+    }).toList();
+
+    setState(() {
+      taskListDataSource = TaskListDataSource(taskListData: filteredList);
+    });
+  }
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  TaskListDataSource taskListDataSource = TaskListDataSource(taskListData: []);
+  late TabController _tabController;
+  String name = "", email = "", tableHead = "";
+  List<DashboardCountModel> dashboardCountList = [];
+  List<TaskList> taskList = <TaskList>[];
+  Future? dashboardCountHandler;
+  Future? taskListHandler;
+  TextEditingController search = TextEditingController();
+  int selectedFilter = 1;
+  final GlobalKey<SfDataGridState> key = GlobalKey<SfDataGridState>();
+  bool? showInsights = false;
 }

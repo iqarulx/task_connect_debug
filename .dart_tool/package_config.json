@@ -278,6 +278,24 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "path_provider",
+      "rootUri": "file:///C:/Users/ramsankar/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider-2.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "path_provider_android",
+      "rootUri": "file:///C:/Users/ramsankar/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_android-2.2.9",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "path_provider_foundation",
+      "rootUri": "file:///C:/Users/ramsankar/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_foundation-2.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "path_provider_linux",
       "rootUri": "file:///C:/Users/ramsankar/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_linux-2.2.1",
       "packageUri": "lib/",
@@ -638,7 +656,7 @@
       "languageVersion": "3.4"
     }
   ],
-  "generated": "2024-08-06T13:04:30.863586Z",
+  "generated": "2024-08-06T13:28:18.228685Z",
   "generator": "pub",
   "generatorVersion": "3.4.4",
   "flutterRoot": "file:///D:/flutter/flutter",

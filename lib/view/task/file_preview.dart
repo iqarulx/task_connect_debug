@@ -25,42 +25,6 @@ class FilePreview extends StatefulWidget {
 }
 
 class _FilePreviewState extends State<FilePreview> {
-  Future<String>? domainHandler;
-  String? domain;
-
-  Future<String> getDomain() async {
-    try {
-      String? domain = await HttpConfig().getFiledomain();
-      setState(() {
-        this.domain = domain;
-      });
-      return domain!;
-    } catch (e) {
-      throw 'Failed to fetch domain';
-    }
-  }
-
-  @override
-  void initState() {
-    domainHandler = getDomain();
-    super.initState();
-  }
-
-  downloadFile(fileUrl) async {
-    futureLoading(context);
-    var fileName = fileUrl.split('/').last;
-    final response = await http.get(Uri.parse(fileUrl));
-    if (response.statusCode == 200) {
-      final bytes = response.bodyBytes;
-      Navigator.pop(context);
-      // await helper.saveAndLaunchFile(bytes, fileName);
-    } else {
-      Navigator.pop(context);
-      showSnackBar(context,
-          content: "Failed to download file", isSuccess: false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -309,6 +273,42 @@ class _FilePreviewState extends State<FilePreview> {
           ),
         );
       }
+    }
+  }
+
+  Future<String>? domainHandler;
+  String? domain;
+
+  Future<String> getDomain() async {
+    try {
+      String? domain = await HttpConfig().getFiledomain();
+      setState(() {
+        this.domain = domain;
+      });
+      return domain!;
+    } catch (e) {
+      throw 'Failed to fetch domain';
+    }
+  }
+
+  @override
+  void initState() {
+    domainHandler = getDomain();
+    super.initState();
+  }
+
+  downloadFile(fileUrl) async {
+    futureLoading(context);
+    var fileName = fileUrl.split('/').last;
+    final response = await http.get(Uri.parse(fileUrl));
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      Navigator.pop(context);
+      await helper.saveAndLaunchFile(bytes, fileName);
+    } else {
+      Navigator.pop(context);
+      showSnackBar(context,
+          content: "Failed to download file", isSuccess: false);
     }
   }
 }

@@ -17,52 +17,6 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  bool passwordvisable = true;
-  TextEditingController username = TextEditingController();
-  TextEditingController password = TextEditingController();
-  var formKey = GlobalKey<FormState>();
-
-  login() async {
-    if (formKey.currentState!.validate()) {
-      if (username.text.isNotEmpty && password.text.isNotEmpty) {
-        try {
-          futureLoading(context);
-          await AuthService()
-              .checkLogin(username: username.text, password: password.text)
-              .then((value) {
-            if (value["head"]["code"] == 200) {
-              Navigator.pop(context);
-              LocalDBConfig()
-                  .newUserLogin(
-                      userId: value["head"]["msg"]["user_id"],
-                      name: value["head"]["msg"]["user_name"],
-                      email: value["head"]["msg"]["email"])
-                  .then((onValue) {
-                showSnackBar(context,
-                    content: "Login Successfully", isSuccess: true);
-                Future.delayed(const Duration(seconds: 1), () {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const DashboardView()));
-                });
-              });
-            } else {
-              Navigator.pop(context);
-              showSnackBar(context,
-                  content: value["head"]["msg"], isSuccess: false);
-            }
-          });
-        } catch (e) {
-          showSnackBar(context, content: e.toString(), isSuccess: false);
-        }
-      } else {
-        showSnackBar(context,
-            content: 'Please enter Username and Password', isSuccess: false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -252,4 +206,50 @@ class _LoginViewState extends State<LoginView> {
       ),
     ));
   }
+
+  login() async {
+    if (formKey.currentState!.validate()) {
+      if (username.text.isNotEmpty && password.text.isNotEmpty) {
+        try {
+          futureLoading(context);
+          await AuthService()
+              .checkLogin(username: username.text, password: password.text)
+              .then((value) {
+            if (value["head"]["code"] == 200) {
+              Navigator.pop(context);
+              LocalDBConfig()
+                  .newUserLogin(
+                      userId: value["head"]["msg"]["user_id"],
+                      name: value["head"]["msg"]["user_name"],
+                      email: value["head"]["msg"]["email"])
+                  .then((onValue) {
+                showSnackBar(context,
+                    content: "Login Successfully", isSuccess: true);
+                Future.delayed(const Duration(seconds: 1), () {
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const DashboardView()));
+                });
+              });
+            } else {
+              Navigator.pop(context);
+              showSnackBar(context,
+                  content: value["head"]["msg"], isSuccess: false);
+            }
+          });
+        } catch (e) {
+          showSnackBar(context, content: e.toString(), isSuccess: false);
+        }
+      } else {
+        showSnackBar(context,
+            content: 'Please enter Username and Password', isSuccess: false);
+      }
+    }
+  }
+
+  bool passwordvisable = true;
+  TextEditingController username = TextEditingController();
+  TextEditingController password = TextEditingController();
+  var formKey = GlobalKey<FormState>();
 }
