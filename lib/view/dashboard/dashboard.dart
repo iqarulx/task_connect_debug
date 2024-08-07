@@ -6,7 +6,6 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:task_connect_debug/models/dashboard_model.dart';
 import 'package:task_connect_debug/services/http/dashboard_service.dart';
 import 'package:task_connect_debug/services/local_db/local_db.dart';
-import 'package:task_connect_debug/view/dashboard/pagination.dart';
 import 'package:task_connect_debug/view/dashboard/task_list.dart';
 import 'package:task_connect_debug/view/task/task_edit.dart';
 import 'package:task_connect_debug/view/task/task_view.dart';
@@ -33,9 +32,6 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView>
     with SingleTickerProviderStateMixin {
-  int currentPage = 0;
-  final int _pageSize = 10;
-
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -57,41 +53,56 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   TabBarView body() {
-    return TabBarView(controller: _tabController, children: [cards(), table()]);
+    return TabBarView(controller: _tabController, children: [
+      cards(),
+      table(),
+    ]);
   }
 
-  RefreshIndicator table() {
-    return RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            taskListHandler = taskListView(1).then((onValue) {
-              setState(() {
-                currentPage = 0;
-                taskListDataSource = TaskListDataSource(
-                  taskListData: taskList,
-                  pageSize: _pageSize,
-                  initialPage: currentPage,
-                );
-                selectedFilter = 1;
-              });
-            });
-          });
-        },
-        child: FutureBuilder(
-            future: taskListHandler,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return futureWaitingLoading();
-              } else if (snapshot.hasError) {
-                if (snapshot.error == 'Network Error') {
-                  return futureDisplayError(content: snapshot.error.toString());
-                } else {
-                  return futureDisplayError(content: snapshot.error.toString());
-                }
-              } else {
-                return taskList.isNotEmpty ? taskListing() : noDataError();
-              }
-            }));
+  FutureBuilder<dynamic> table() {
+    return FutureBuilder(
+      future: taskListHandler,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return futureWaitingLoading();
+        } else if (snapshot.hasError) {
+          if (snapshot.error == 'Network Error') {
+            return futureDisplayError(content: snapshot.error.toString());
+          } else {
+            return futureDisplayError(content: snapshot.error.toString());
+          }
+        } else {
+          return taskList.isNotEmpty
+              ? RefreshIndicator(
+                  onRefresh: () async {
+                    setState(() {
+                      taskListHandler = taskListView(1).then((onValue) {
+                        setState(() {
+                          taskListDataSource =
+                              TaskListDataSource(taskListData: taskList);
+                          selectedFilter = 1;
+                        });
+                      });
+                    });
+                  },
+                  child: taskListing(),
+                )
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    setState(() {
+                      taskListHandler = taskListView(1).then((onValue) {
+                        setState(() {
+                          taskListDataSource =
+                              TaskListDataSource(taskListData: taskList);
+                          selectedFilter = 1;
+                        });
+                      });
+                    });
+                  },
+                  child: noDataError());
+        }
+      },
+    );
   }
 
   Padding taskListing() {
@@ -125,10 +136,8 @@ class _DashboardViewState extends State<DashboardView>
                           search.clear();
                           taskListHandler =
                               taskListView(selectedFilter).then((onValue) {
-                            taskListDataSource = TaskListDataSource(
-                                taskListData: taskList,
-                                pageSize: _pageSize,
-                                initialPage: currentPage);
+                            taskListDataSource =
+                                TaskListDataSource(taskListData: taskList);
                           });
                         });
                       },
@@ -216,6 +225,7 @@ class _DashboardViewState extends State<DashboardView>
             child: SfDataGrid(
               key: key,
               allowSorting: true,
+              // rowsPerPage: 5,
               frozenColumnsCount: 1,
               headerGridLinesVisibility: GridLinesVisibility.both,
               gridLinesVisibility: GridLinesVisibility.both,
@@ -380,22 +390,10 @@ class _DashboardViewState extends State<DashboardView>
                         ))),
               ],
             ),
-          ),
-          PaginationControls(
-            currentPage: currentPage,
-            totalPages: taskListDataSource.totalPages,
-            onPageChanged: onPageChanged,
-          ),
+          )
         ],
       ),
     );
-  }
-
-  onPageChanged(int newPage) {
-    setState(() {
-      currentPage = newPage;
-      taskListDataSource.goToPage(currentPage);
-    });
   }
 
   FutureBuilder<dynamic> cards() {
@@ -428,10 +426,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(1).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 1;
                               });
                             });
@@ -451,10 +447,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(2).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 2;
                               });
                             });
@@ -478,10 +472,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(3).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 3;
                               });
                             });
@@ -501,10 +493,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(4).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 4;
                               });
                             });
@@ -529,10 +519,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(5).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 5;
                               });
                             });
@@ -552,10 +540,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(6).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 6;
                               });
                             });
@@ -579,10 +565,8 @@ class _DashboardViewState extends State<DashboardView>
                             _tabController.animateTo(1);
                             setState(() {
                               taskListHandler = taskListView(7).then((onValue) {
-                                taskListDataSource = TaskListDataSource(
-                                    taskListData: taskList,
-                                    pageSize: _pageSize,
-                                    initialPage: currentPage);
+                                taskListDataSource =
+                                    TaskListDataSource(taskListData: taskList);
                                 selectedFilter = 7;
                               });
                             });
@@ -902,10 +886,7 @@ class _DashboardViewState extends State<DashboardView>
           setState(() {
             dashboardCountHandler = dashboardCountListView();
             taskListHandler = taskListView(1).then((onValue) {
-              taskListDataSource = TaskListDataSource(
-                  taskListData: taskList,
-                  pageSize: _pageSize,
-                  initialPage: currentPage);
+              taskListDataSource = TaskListDataSource(taskListData: taskList);
               selectedFilter = 1;
             });
           });
@@ -936,10 +917,7 @@ class _DashboardViewState extends State<DashboardView>
         setState(() {
           dashboardCountHandler = dashboardCountListView();
           taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(
-                taskListData: taskList,
-                pageSize: _pageSize,
-                initialPage: currentPage);
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
             selectedFilter = 1;
           });
         });
@@ -962,10 +940,7 @@ class _DashboardViewState extends State<DashboardView>
         setState(() {
           dashboardCountHandler = dashboardCountListView();
           taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(
-                taskListData: taskList,
-                pageSize: _pageSize,
-                initialPage: currentPage);
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
             selectedFilter = 1;
           });
         });
@@ -997,10 +972,7 @@ class _DashboardViewState extends State<DashboardView>
             setState(() {
               dashboardCountHandler = dashboardCountListView();
               taskListHandler = taskListView(1).then((onValue) {
-                taskListDataSource = TaskListDataSource(
-                    taskListData: taskList,
-                    pageSize: _pageSize,
-                    initialPage: currentPage);
+                taskListDataSource = TaskListDataSource(taskListData: taskList);
                 selectedFilter = 1;
               });
             });
@@ -1020,10 +992,7 @@ class _DashboardViewState extends State<DashboardView>
     super.initState();
     dashboardCountHandler = dashboardCountListView().whenComplete(initData);
     taskListHandler = taskListView(1).then((onValue) {
-      taskListDataSource = TaskListDataSource(
-          taskListData: taskList,
-          pageSize: _pageSize,
-          initialPage: currentPage);
+      taskListDataSource = TaskListDataSource(taskListData: taskList);
       selectedFilter = 1;
     });
     _tabController = TabController(length: 2, vsync: this);
@@ -1067,10 +1036,7 @@ class _DashboardViewState extends State<DashboardView>
         if (onValue) {
           dashboardCountHandler = dashboardCountListView();
           taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(
-                taskListData: taskList,
-                pageSize: _pageSize,
-                initialPage: currentPage);
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
             selectedFilter = 1;
           });
         }
@@ -1098,10 +1064,7 @@ class _DashboardViewState extends State<DashboardView>
         if (onValue) {
           dashboardCountHandler = dashboardCountListView();
           taskListHandler = taskListView(1).then((onValue) {
-            taskListDataSource = TaskListDataSource(
-                taskListData: taskList,
-                pageSize: _pageSize,
-                initialPage: currentPage);
+            taskListDataSource = TaskListDataSource(taskListData: taskList);
             selectedFilter = 1;
           });
         }
@@ -1142,21 +1105,16 @@ class _DashboardViewState extends State<DashboardView>
     }).toList();
 
     setState(() {
-      taskListDataSource = TaskListDataSource(
-          taskListData: filteredList,
-          pageSize: _pageSize,
-          initialPage: currentPage);
+      taskListDataSource = TaskListDataSource(taskListData: filteredList);
     });
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  TaskListDataSource taskListDataSource =
-      TaskListDataSource(taskListData: [], pageSize: 10, initialPage: 0);
+  TaskListDataSource taskListDataSource = TaskListDataSource(taskListData: []);
   late TabController _tabController;
   String name = "", email = "", tableHead = "";
   List<DashboardCountModel> dashboardCountList = [];
   List<TaskList> taskList = <TaskList>[];
-  List<TaskList> paginatedTaskList = <TaskList>[];
   Future? dashboardCountHandler;
   Future? taskListHandler;
   TextEditingController search = TextEditingController();

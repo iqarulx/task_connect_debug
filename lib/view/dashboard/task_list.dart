@@ -33,30 +33,8 @@ class TaskList {
 }
 
 class TaskListDataSource extends DataGridSource {
-  TaskListDataSource({
-    required List<TaskList> taskListData,
-    required int pageSize,
-    required int initialPage,
-  })  : allTaskListData = taskListData,
-        _pageSize = pageSize,
-        _currentPage = initialPage {
-    _updatePage();
-  }
-
-  final List<TaskList> allTaskListData;
-  final int _pageSize;
-  int _currentPage;
-
-  List<DataGridRow> _taskListData = [];
-
-  _updatePage() {
-    final startIndex = _currentPage * _pageSize;
-    final endIndex = (startIndex + _pageSize < allTaskListData.length)
-        ? startIndex + _pageSize
-        : allTaskListData.length;
-
-    _taskListData = allTaskListData
-        .sublist(startIndex, endIndex)
+  TaskListDataSource({required List<TaskList> taskListData}) {
+    _taskListData = taskListData
         .map<DataGridRow>((e) => DataGridRow(cells: [
               DataGridCell<String>(columnName: 'sno', value: e.sno),
               DataGridCell<Widget>(columnName: 'viewTask', value: e.viewTask),
@@ -81,11 +59,7 @@ class TaskListDataSource extends DataGridSource {
         .toList();
   }
 
-  void goToPage(int pageIndex) {
-    _currentPage = pageIndex;
-    _updatePage();
-    notifyListeners();
-  }
+  List<DataGridRow> _taskListData = [];
 
   @override
   List<DataGridRow> get rows => _taskListData;
@@ -136,7 +110,4 @@ class TaskListDataSource extends DataGridSource {
       }).toList(),
     );
   }
-
-  // Getter to expose total number of pages
-  int get totalPages => (allTaskListData.length / _pageSize).ceil();
 }

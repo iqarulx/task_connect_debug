@@ -638,7 +638,7 @@ packages:
     source: hosted
     version: "26.1.41"
   syncfusion_flutter_xlsio:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: syncfusion_flutter_xlsio
       sha256: "091fe59c68aca2bc98fb620a3a43313e4d99e270037fef561ad424ceb7cb05ee"
