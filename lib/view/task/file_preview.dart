@@ -1,5 +1,10 @@
-import 'dart:io';
+/*
+  Copyright 2024 Srisoftwarez. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';

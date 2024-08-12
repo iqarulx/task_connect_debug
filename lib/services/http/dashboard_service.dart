@@ -1,6 +1,11 @@
+/*
+  Copyright 2024 Srisoftwarez. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
+
 import 'dart:convert';
 import 'package:task_connect_debug/services/local_db/local_db.dart';
-
 import 'http_config.dart';
 import 'package:http/http.dart' as http;
 
@@ -95,6 +100,14 @@ class DashboardService extends HttpConfig {
             "employee_id": employeeId,
             "attachment": file
           }));
+
+      print(jsonEncode({
+        "task_complete": 1,
+        "task_tracker_id": taskId,
+        "employee_id": employeeId,
+        "attachment": file
+      }));
+
       var response = json.decode(message.body);
       return response;
     } catch (e) {

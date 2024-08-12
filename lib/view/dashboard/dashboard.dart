@@ -1,7 +1,14 @@
+/*
+  Copyright 2024 Srisoftwarez. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:task_connect_debug/models/dashboard_model.dart';
 import 'package:task_connect_debug/services/http/dashboard_service.dart';
@@ -10,15 +17,7 @@ import 'package:task_connect_debug/view/dashboard/pagination.dart';
 import 'package:task_connect_debug/view/dashboard/task_list.dart';
 import 'package:task_connect_debug/view/task/task_edit.dart';
 import 'package:task_connect_debug/view/task/task_view.dart';
-import 'package:task_connect_debug/view/utils/colors.dart';
-import 'package:task_connect_debug/view/utils/confirm_dialog.dart';
-import 'package:task_connect_debug/view/utils/drawer.dart';
-import 'package:task_connect_debug/view/utils/error_display.dart';
-import 'package:task_connect_debug/view/utils/loading.dart';
-import 'package:task_connect_debug/view/utils/reallocation_dialog.dart';
-import 'package:task_connect_debug/view/utils/snackbar.dart';
-import 'package:task_connect_debug/view/utils/widget_utils.dart';
-import 'package:task_connect_debug/view/utils/taskcomplete_dialog.dart';
+import 'package:task_connect_debug/view/utils/utils.dart';
 import 'package:syncfusion_flutter_datagrid_export/export.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' hide Column, Row;
 import 'helper.dart' if (dart.library.html) 'helper/save_file_web.dart'
@@ -33,9 +32,6 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView>
     with SingleTickerProviderStateMixin {
-  int currentPage = 0;
-  final int _pageSize = 10;
-
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -51,7 +47,8 @@ class _DashboardViewState extends State<DashboardView>
         appBar: appbar(),
         body: body(),
         floatingActionButton: floatingButtons(),
-        endDrawer: drawer(context, name, email, showInsights ?? false),
+        endDrawer: drawer(context, name, email, showInsights ?? false,
+            currentVersion ?? '1.0.1'),
       ),
     );
   }
@@ -391,13 +388,6 @@ class _DashboardViewState extends State<DashboardView>
     );
   }
 
-  onPageChanged(int newPage) {
-    setState(() {
-      currentPage = newPage;
-      taskListDataSource.goToPage(currentPage);
-    });
-  }
-
   FutureBuilder<dynamic> cards() {
     return FutureBuilder(
       future: dashboardCountHandler,
@@ -675,10 +665,13 @@ class _DashboardViewState extends State<DashboardView>
     );
   }
 
-  Future<void> dashboardCountListView() async {
+  Future dashboardCountListView() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
     try {
       setState(() {
         dashboardCountList.clear();
+        currentVersion = packageInfo.version;
       });
 
       return await DashboardService()
@@ -716,7 +709,7 @@ class _DashboardViewState extends State<DashboardView>
     }
   }
 
-  Future<void> taskListView(int? filter) async {
+  Future taskListView(int? filter) async {
     setState(() {
       taskList.clear();
     });
@@ -1016,7 +1009,7 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   @override
-  void initState() {
+  initState() {
     super.initState();
     dashboardCountHandler = dashboardCountListView().whenComplete(initData);
     taskListHandler = taskListView(1).then((onValue) {
@@ -1130,7 +1123,7 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   @override
-  void dispose() {
+  dispose() {
     _tabController.dispose();
     super.dispose();
   }
@@ -1149,6 +1142,13 @@ class _DashboardViewState extends State<DashboardView>
     });
   }
 
+  onPageChanged(int newPage) {
+    setState(() {
+      currentPage = newPage;
+      taskListDataSource.goToPage(currentPage);
+    });
+  }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   TaskListDataSource taskListDataSource =
       TaskListDataSource(taskListData: [], pageSize: 10, initialPage: 0);
@@ -1163,4 +1163,7 @@ class _DashboardViewState extends State<DashboardView>
   int selectedFilter = 1;
   final GlobalKey<SfDataGridState> key = GlobalKey<SfDataGridState>();
   bool? showInsights = false;
+  int currentPage = 0;
+  final int _pageSize = 10;
+  String? currentVersion;
 }

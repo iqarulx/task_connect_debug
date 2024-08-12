@@ -176,17 +176,19 @@ class _TaskcompleteDialogState extends State<TaskcompleteDialog> {
                       await DashboardService()
                           .completeTask(widget.taskId, onValue)
                           .then((onValue) {
-                        if (onValue["head"]["code"] == 200) {
-                          Navigator.pop(context, true);
-                        } else {
-                          Navigator.pop(context, false);
-                        }
+                        // if (onValue["head"]["code"] == 200) {
+                        //   Navigator.pop(context, true);
+                        // } else {
+                        //   Navigator.pop(context, false);
+                        // }
                       });
                     });
                   } else {
+                    futureLoading(context);
                     await DashboardService()
                         .completeTask(widget.taskId, '')
                         .then((onValue) {
+                      Navigator.pop(context);
                       if (onValue["head"]["code"] == 200) {
                         Navigator.pop(context, true);
                       } else {

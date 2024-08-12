@@ -1,3 +1,9 @@
+/*
+  Copyright 2024 Srisoftwarez. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
+
 class ImageAssets {
   static const String logo = 'assets/images/logo.png';
   static const String loginBackground = 'assets/images/login_background.png';
