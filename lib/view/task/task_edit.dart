@@ -47,7 +47,6 @@ class _TaskEditState extends State<TaskEdit> {
   List<File> files = [];
   List<dynamic> previousFiles = [];
   List<dynamic> selectedUserIds = [];
-  List<List<String>> selectedUsersRows = [];
   List<String> uploadFiles = [];
   List<dynamic> recipientAttachments = [];
 
@@ -280,6 +279,16 @@ class _TaskEditState extends State<TaskEdit> {
                           content: snapshot.error.toString());
                     }
                   } else {
+                    // print(
+                    //     "SelectedId : $selectedDepartmentId SelectedId : $selectedCompanyId");
+                    // print("Before ${departmentDataList.map(
+                    //       (department) =>
+                    //           "${department.departmentId}${department.departmentName}${department.companyId}",
+                    //     ).toList()}");
+                    // print(
+                    //     "After ${departmentDataList.where((department) => department.companyId == selectedCompanyId).map(
+                    //           (department) => "${department.departmentId}",
+                    //         ).toList()}");
                     return screenView(context);
                   }
                 })),
@@ -933,7 +942,7 @@ class _TaskEditState extends State<TaskEdit> {
             fillColor: Colors.grey.shade200,
           ),
           items: departmentDataList
-              .where((department) => department.companyId == selectedCompanyId)
+              // .where((department) => department.companyId == selectedCompanyId)
               .map((department) => DropdownMenuItem(
                     value: department.departmentId,
                     child: Text(department.departmentName!),

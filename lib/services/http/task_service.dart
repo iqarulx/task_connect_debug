@@ -24,6 +24,8 @@ class TaskService extends HttpConfig {
     try {
       var url = await getDomain();
       var headers = await getHeader();
+      print(url);
+      print(jsonEncode({"task_tracker_id": taskId}));
       var message = await http.post(url,
           headers: headers, body: jsonEncode({"task_tracker_id": taskId}));
       var response = json.decode(message.body);

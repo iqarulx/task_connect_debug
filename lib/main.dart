@@ -14,7 +14,6 @@ import 'package:task_connect_debug/view/utils/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var isLogin = await LocalDBConfig().checkLogin();
-
   HttpOverrides.global = MyHttpOverrides();
   runApp(MyApp(isLogin: isLogin));
 }

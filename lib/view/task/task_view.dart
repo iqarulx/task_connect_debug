@@ -182,49 +182,54 @@ class _TaskViewState extends State<TaskView> {
         startDate.text.isNotEmpty &&
         endDate.text.isNotEmpty) {
       if (selectedUserIds.isNotEmpty) {
-        futureLoading(context);
-
-        var employeeId = await LocalDBConfig().getUserId();
-        uploadFiles.clear();
-        if (files.isNotEmpty) {
-          for (int index = 0; index < files.length; index++) {
-            var file = files[index];
-            var onValue =
-                await FilePickerService().uploadFile(file, "attachment", index);
-            uploadFiles.add(onValue);
-          }
-        }
-
-        try {
-          Map<String, dynamic> formData = {
-            "task_tracker_edit_id": '',
-            "employee_id": employeeId,
-            "company_id": selectedCompanyId,
-            "subject": subject.text,
-            "description": description.text,
-            "department": selectedDepartmentId,
-            "priority": selectedPriority,
-            "start_date": startDate.text,
-            "end_date": endDate.text,
-            "attachment": uploadFiles,
-            "recipients": selectedUserIds
-          };
-
-          await TaskService().updateTask(formData).then((onValue) {
-            if (onValue["head"]["code"] == 200) {
-              Navigator.pop(context);
-              showSnackBar(context,
-                  content: onValue["head"]["msg"], isSuccess: true);
-              Navigator.pop(context, true);
-            } else {
-              Navigator.pop(context);
-              showSnackBar(context,
-                  content: onValue["head"]["msg"], isSuccess: false);
+        if (selectedUsersRows.length == selectedUserIds.length) {
+          futureLoading(context);
+          var employeeId = await LocalDBConfig().getUserId();
+          uploadFiles.clear();
+          if (files.isNotEmpty) {
+            for (int index = 0; index < files.length; index++) {
+              var file = files[index];
+              var onValue = await FilePickerService()
+                  .uploadFile(file, "attachment", index);
+              uploadFiles.add(onValue);
             }
-          });
-        } catch (e) {
-          Navigator.pop(context);
-          showSnackBar(context, content: e.toString(), isSuccess: false);
+          }
+
+          try {
+            Map<String, dynamic> formData = {
+              "task_tracker_edit_id": '',
+              "employee_id": employeeId,
+              "company_id": selectedCompanyId,
+              "subject": subject.text,
+              "description": description.text,
+              "department": selectedDepartmentId,
+              "priority": selectedPriority,
+              "start_date": startDate.text,
+              "end_date": endDate.text,
+              "attachment": uploadFiles,
+              "recipients": selectedUserIds
+            };
+
+            await TaskService().updateTask(formData).then((onValue) {
+              if (onValue["head"]["code"] == 200) {
+                Navigator.pop(context);
+                showSnackBar(context,
+                    content: onValue["head"]["msg"], isSuccess: true);
+                Navigator.pop(context, true);
+              } else {
+                Navigator.pop(context);
+                showSnackBar(context,
+                    content: onValue["head"]["msg"], isSuccess: false);
+              }
+            });
+          } catch (e) {
+            Navigator.pop(context);
+            showSnackBar(context, content: e.toString(), isSuccess: false);
+          }
+        } else {
+          showSnackBar(context,
+              content: "Add or remove recipients. Don't be empty",
+              isSuccess: false);
         }
       } else {
         showSnackBar(context,

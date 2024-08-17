@@ -101,13 +101,6 @@ class DashboardService extends HttpConfig {
             "attachment": file
           }));
 
-      print(jsonEncode({
-        "task_complete": 1,
-        "task_tracker_id": taskId,
-        "employee_id": employeeId,
-        "attachment": file
-      }));
-
       var response = json.decode(message.body);
       return response;
     } catch (e) {
